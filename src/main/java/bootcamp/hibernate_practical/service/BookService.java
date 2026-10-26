@@ -4,12 +4,15 @@ import bootcamp.hibernate_practical.dto.BookResponse;
 import bootcamp.hibernate_practical.dto.CreateBookRequest;
 import bootcamp.hibernate_practical.dto.UpdateBookRequest;
 import bootcamp.hibernate_practical.entity.Book;
+import bootcamp.hibernate_practical.exception.BookNotFoundException;
 import bootcamp.hibernate_practical.repository.BookRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class BookService {
     private final BookRepository bookRepository;
 
@@ -17,6 +20,7 @@ public class BookService {
         this.bookRepository = bookRepository;
     }
 
+    @Transactional
     public BookResponse createBook(CreateBookRequest request) {
         Book book = new Book(
                 request.getTitle(),
@@ -30,46 +34,59 @@ public class BookService {
     }
 
     public List<BookResponse> getAllBooks() {
-        // TODO:
-        // Fetch all books from the repository
-        // Convert each Book entity into BookResponse DTO
-        // Return the list
-        return null;
+        return mapToResponses(bookRepository.findAll());
     }
 
     public BookResponse getBookById(Long id) {
-        // TODO
-        // Find the book by its ID
-        // Throw RuntimeException if not found
-        // Convert the entity to BookResponse
-        return null;
+        return mapToResponse(findBookOrThrow(id));
     }
 
+    @Transactional
     public BookResponse updateBook(Long id, UpdateBookRequest request) {
-        // TODO
-        // Find existing book
-        // Update its fields
-        // Save the updated entity
-        // Convert to BookResponse
-        return null;
+        Book book = findBookOrThrow(id);
+        book.setTitle(request.getTitle());
+        book.setAuthor(request.getAuthor());
+        book.setGenre(request.getGenre());
+        book.setPublicationYear(request.getPublicationYear());
+        book.setAvailable(request.isAvailable());
+        return mapToResponse(bookRepository.save(book));
     }
 
+    @Transactional
     public void deleteBook(Long id) {
-        // TODO
+        if (!bookRepository.existsById(id)) {
+            throw new BookNotFoundException(id);
+        }
+        bookRepository.deleteById(id);
     }
 
     public List<BookResponse> findByAuthor(String author) {
-        // TODO
-        return null;
+        return mapToResponses(bookRepository.findByAuthor(author));
     }
 
-    public List<BookResponse> findAvailableBooks(){
-        // TODO
-        return null;
+    public List<BookResponse> findAvailableBooks() {
+        return mapToResponses(bookRepository.findByAvailableTrue());
+    }
+
+    private Book findBookOrThrow(Long id) {
+        return bookRepository.findById(id)
+                .orElseThrow(() -> new BookNotFoundException(id));
+    }
+
+    private List<BookResponse> mapToResponses(List<Book> books) {
+        return books.stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     private BookResponse mapToResponse(Book book) {
-        // TODO: map Book to BookResponse
-        return null;
+        return new BookResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getGenre(),
+                book.getPublicationYear(),
+                book.isAvailable()
+        );
     }
 }
