@@ -55,4 +55,18 @@ public class BookController {
     public List<BookResponse> getAvailableBooks() {
         return bookService.findAvailableBooks();
     }
+    @GetMapping("/search")
+    public List<BookResponse> searchByTitle(@RequestParam String title) {
+        return bookService.searchByTitle(title);
+    }
+
+    @GetMapping("/published-after")
+    public List<BookResponse> getPublishedAfter(@RequestParam int year) {
+        return bookService.findPublishedAfter(year);
+    }
+
+    @GetMapping("/count")
+    public long countBooks() {
+        return bookService.countBooks();
+    }
 }

@@ -67,6 +67,17 @@ public class BookService {
     public List<BookResponse> findAvailableBooks() {
         return mapToResponses(bookRepository.findByAvailableTrue());
     }
+    public List<BookResponse> searchByTitle(String title) {
+        return mapToResponses(bookRepository.findByTitleContainingIgnoreCase(title));
+    }
+
+    public List<BookResponse> findPublishedAfter(int year) {
+        return mapToResponses(bookRepository.findByPublicationYearGreaterThan(year));
+    }
+
+    public long countBooks() {
+        return bookRepository.count();
+    }
 
     private Book findBookOrThrow(Long id) {
         return bookRepository.findById(id)
