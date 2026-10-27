@@ -31,7 +31,16 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
-
+    @ExceptionHandler(BookStateException.class)
+    public ResponseEntity<ErrorResponse> handleBookState(BookStateException ex) {
+        ErrorResponse body = new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                "Conflict",
+                ex.getMessage(),
+                Instant.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fieldErrors = new LinkedHashMap<>();

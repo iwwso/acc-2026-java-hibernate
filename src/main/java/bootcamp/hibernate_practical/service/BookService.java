@@ -4,7 +4,9 @@ import bootcamp.hibernate_practical.dto.BookResponse;
 import bootcamp.hibernate_practical.dto.CreateBookRequest;
 import bootcamp.hibernate_practical.dto.UpdateBookRequest;
 import bootcamp.hibernate_practical.entity.Book;
+import bootcamp.hibernate_practical.entity.BorrowedStatus;
 import bootcamp.hibernate_practical.exception.BookNotFoundException;
+import bootcamp.hibernate_practical.exception.BookStateException;
 import bootcamp.hibernate_practical.repository.BookRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,8 +28,7 @@ public class BookService {
                 request.getTitle(),
                 request.getAuthor(),
                 request.getGenre(),
-                request.getPublicationYear(),
-                true
+                request.getPublicationYear()
         );
         Book savedBook = bookRepository.save(book);
         return mapToResponse(savedBook);
@@ -48,7 +49,7 @@ public class BookService {
         book.setAuthor(request.getAuthor());
         book.setGenre(request.getGenre());
         book.setPublicationYear(request.getPublicationYear());
-        book.setAvailable(request.isAvailable());
+        book.setBorrowedStatus(request.isAvailable() ? BorrowedStatus.AVAILABLE : BorrowedStatus.BORROWED);
         return mapToResponse(bookRepository.save(book));
     }
 
@@ -65,8 +66,9 @@ public class BookService {
     }
 
     public List<BookResponse> findAvailableBooks() {
-        return mapToResponses(bookRepository.findByAvailableTrue());
+        return mapToResponses(bookRepository.findByBorrowedStatus(BorrowedStatus.AVAILABLE));
     }
+
     public List<BookResponse> searchByTitle(String title) {
         return mapToResponses(bookRepository.findByTitleContainingIgnoreCase(title));
     }
@@ -77,6 +79,26 @@ public class BookService {
 
     public long countBooks() {
         return bookRepository.count();
+    }
+
+    @Transactional
+    public BookResponse borrowBook(Long id) {
+        Book book = findBookOrThrow(id);
+        if (book.getBorrowedStatus() == BorrowedStatus.BORROWED) {
+            throw new BookStateException("Book " + id + " is already borrowed");
+        }
+        book.setBorrowedStatus(BorrowedStatus.BORROWED);
+        return mapToResponse(bookRepository.save(book));
+    }
+
+    @Transactional
+    public BookResponse returnBook(Long id) {
+        Book book = findBookOrThrow(id);
+        if (book.getBorrowedStatus() == BorrowedStatus.AVAILABLE) {
+            throw new BookStateException("Book " + id + " is not borrowed");
+        }
+        book.setBorrowedStatus(BorrowedStatus.AVAILABLE);
+        return mapToResponse(bookRepository.save(book));
     }
 
     private Book findBookOrThrow(Long id) {
@@ -97,7 +119,8 @@ public class BookService {
                 book.getAuthor(),
                 book.getGenre(),
                 book.getPublicationYear(),
-                book.isAvailable()
+                book.isAvailable(),
+                book.getBorrowedStatus()
         );
     }
 }

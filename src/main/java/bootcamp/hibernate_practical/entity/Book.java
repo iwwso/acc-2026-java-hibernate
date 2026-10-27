@@ -1,6 +1,8 @@
 package bootcamp.hibernate_practical.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,13 +23,20 @@ public class Book {
     private String author;
     private String genre;
     private int publicationYear;
-    private boolean available;
 
-    public Book(String title, String author, String genre, int publicationYear, boolean available) {
+    @Enumerated(EnumType.STRING)
+    private BorrowedStatus borrowedStatus = BorrowedStatus.AVAILABLE;
+
+    public Book(String title, String author, String genre, int publicationYear) {
         this.title = title;
         this.author = author;
         this.genre = genre;
         this.publicationYear = publicationYear;
-        this.available = available;
+        this.borrowedStatus = BorrowedStatus.AVAILABLE;
+    }
+
+    /** Derived from borrowedStatus - there is no separate column for it. */
+    public boolean isAvailable() {
+        return borrowedStatus == BorrowedStatus.AVAILABLE;
     }
 }
