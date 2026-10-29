@@ -25,9 +25,10 @@ Complete all of the 'TODO' portions of the code. The finished application should
 
 All endpoints require HTTP Basic authentication.
 
-User	Password	Role	 Can do
-user	  user	    USER	GET only
-admin	  admin	    ADMIN	everything
+| User | Password | Role | Can do |
+| --- | --- | --- | --- |
+| `user` | `user` | USER | GET only |
+| `admin` | `admin` | ADMIN | everything |
 
 
 Passwords are stored BCrypt-encoded in an in-memory user store
